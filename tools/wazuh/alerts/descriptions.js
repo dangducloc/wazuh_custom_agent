@@ -8,14 +8,14 @@ export const toolDefinitions = [
     {
         name: "get_alerts_count",
         description:
-            "Count the number of alerts in Wazuh by filter conditions (time range, rule, agent, severity...). Used to gauge alert volume before diving into detailed searches.",
+            "Count the number of alerts in Wazuh matching a filter (time range, rule, agent, severity...). Only accepts a 'query' clause — no size/sort/_source. Use to gauge alert volume before running search_alerts.",
         input_schema: {
             type: "object",
             properties: {
                 query: {
                     type: "object",
                     description:
-                        "OpenSearch DSL query body to filter alerts (bool, range, term...).",
+                        "OpenSearch DSL query clause (bool, range, term...) — this endpoint only accepts 'query', nothing else.",
                 },
             },
             required: ["query"],
@@ -59,7 +59,7 @@ export const toolDefinitions = [
 ];
 
 export const toolHandlers = {
-    get_alerts_count: (input) => AlertsCountInfo(input.query),
+    get_alerts_count: (input) => AlertsCountInfo({ query: input.query }),
     search_alerts: (input) =>
         AlertsSearch({
             query: input.query,
