@@ -29,7 +29,7 @@ try {
       },
       {
         role: "user",
-        content: "Check cluster health then search for web group alert for past 12weeks ",
+        content: "check for any ssh auth failures in the last 12 weeks ",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,
