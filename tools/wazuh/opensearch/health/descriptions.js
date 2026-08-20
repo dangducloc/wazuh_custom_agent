@@ -1,4 +1,4 @@
-// /tools/wazuh/health/descriptions.js
+// /tools/wazuh/opensearch/health/descriptions.js
 
 import { HealthCheck } from "./fetch.cluster-health.js";
 

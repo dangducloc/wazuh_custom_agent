@@ -1,8 +1,8 @@
 // /tools/wazuh/mapping/alert.mapping.js
 // get the mapping of the wazuh-alerts-* index from OpenSearch and export it for use in other parts of the application.
-import { MAPPING_WAZUH_ALERTS_ENDPOINT } from "../../../utils/index.js";
-import { opensearchConfig } from "../../../config/index.js";
-import {logger, insecureAgent} from "../../../utils/index.js";
+import { MAPPING_WAZUH_ALERTS_ENDPOINT } from "../../../../utils/index.js";
+import { opensearchConfig } from "../../../../config/index.js";
+import {logger, insecureAgent} from "../../../../utils/index.js";
 import {fetch} from "undici";
 
 const url = `${opensearchConfig.OPENSEARCH_URL}${MAPPING_WAZUH_ALERTS_ENDPOINT.path}`;

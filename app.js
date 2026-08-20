@@ -29,7 +29,7 @@ try {
       },
       {
         role: "user",
-        content: "check for any ssh auth failures in today?and check for src ip, username, and timestamp",
+        content: "check if cluster is healthy and if not, provide the reason",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,

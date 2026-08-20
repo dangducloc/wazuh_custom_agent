@@ -1,7 +1,7 @@
-// file /tools/wazuh/health/fetch.cluster-health.js this file is used to check the health of the Wazuh agent and related services. It imports necessary modules, reads environment variables, and exports the health check function for use in other parts of the application.
-import { opensearchConfig } from "../../../config/index.js";
+// file /tools/wazuh/opensearch/health/fetch.cluster-health.js this file is used to check the health of the Wazuh agent and related services. It imports necessary modules, reads environment variables, and exports the health check function for use in other parts of the application.
+import { opensearchConfig } from "../../../../config/index.js";
 import {fetch} from "undici";
-import {logger,insecureAgent,CLUSTER_HEALTH_ENDPOINT} from "../../../utils/index.js";
+import {logger,insecureAgent,CLUSTER_HEALTH_ENDPOINT} from "../../../../utils/index.js";
 
 const url = `${opensearchConfig.OPENSEARCH_URL}${CLUSTER_HEALTH_ENDPOINT.path}`;
 

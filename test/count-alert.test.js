@@ -1,6 +1,6 @@
 // /test/count-alert.test.js is a test file that uses the Jest testing framework to test the functionality of the fetch.wazuh-alert-count.js script.
 import { describe, it } from "node:test";
-import { AlertsCountInfo } from "../tools/wazuh/alerts/fetch.alerts-count.js";
+import { AlertsCountInfo } from "../tools/wazuh/opensearch/alerts/fetch.alerts-count.js";
 import { logger } from "../utils/index.js";
 
 describe("AlertsCountInfo", () => {

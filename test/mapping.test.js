@@ -1,7 +1,7 @@
 // /test/mapping.test.js test mapping funcs
 
 import {describe, it} from "node:test";
-import {AlertsMapping} from "../tools/wazuh/mapping/alert.mapping.js";
+import {AlertsMapping} from "../tools/wazuh/opensearch/mapping/alert.mapping.js";
 
 describe("Wazuh Alerts Mapping", () => {
     it("should fetch the mapping for Wazuh alerts indices", async () => {
