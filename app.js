@@ -29,7 +29,7 @@ try {
       },
       {
         role: "user",
-        content: "check for any ssh auth failures in the last 12 weeks ",
+        content: "check for any ssh auth failures in today?and check for src ip, username, and timestamp",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,

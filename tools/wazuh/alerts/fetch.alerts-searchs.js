@@ -1,8 +1,7 @@
 // /tools/wazuh/alerts/fetch.alerts-searchs.js
 import { opensearchConfig } from "../../../config/index.js";
-import { insecureAgent } from "../../../utils/opensearch-endpoints.js";
 import { fetch } from "undici";
-import { INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT, logger } from "../../../utils/index.js";
+import { INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT, logger, insecureAgent} from "../../../utils/index.js";
 
 const url_search = `${opensearchConfig.OPENSEARCH_URL}${INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT.path}`;
 

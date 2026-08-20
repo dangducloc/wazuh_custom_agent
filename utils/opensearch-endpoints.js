@@ -1,11 +1,6 @@
 // file /utils/opensearch-endpoints.js this file is used to define the OpenSearch endpoints for the application. It imports necessary modules, reads environment variables, and exports the configured OpenSearch endpoints for use in other parts of the application.
 import { opensearchConfig } from "../config/index.js";
-import {Agent} from "undici";
-export const insecureAgent = new Agent({
-    connect: {
-        rejectUnauthorized: false, // Disable SSL certificate validation
-    },
-});
+
 
 
 //health endpoint
