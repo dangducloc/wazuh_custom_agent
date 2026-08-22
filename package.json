@@ -12,6 +12,7 @@
   "dependencies": {
     "ai": "^7.0.51",
     "ai-gateway-provider": "^4.0.0",
+    "axios": "^1.19.0",
     "dotenv": "^17.4.2",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",
