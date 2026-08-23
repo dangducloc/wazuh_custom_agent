@@ -3,8 +3,8 @@ import path from "path";
 import fs from "fs";
 import https from "https";
 import axios from "axios";
-import { wazuhApiConfig } from "../config/index.js";
-import { WAZUH_API_AUTH_ENDPOINT, wazuhAxios } from "../utils/index.js";
+import { wazuhApiConfig } from "../../config/index.js";
+import { WAZUH_API_AUTH_ENDPOINT, wazuhAxios } from "../index.js";
 
 const __dirname = import.meta.dirname;
 const tokenFilePath = path.join(__dirname, "../", "cache", "token.json");

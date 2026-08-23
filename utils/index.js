@@ -29,4 +29,5 @@ export { table2Json } from "./format/table2json.js";
 //helper
 export * from "./helper.js";
 
-export { getToken} from "./get-wazuh-api-token.js";
+export { getToken} from "./helper/get-wazuh-api-token.js";
+export { isValidAgentConfig } from "./helper/isValidAgentConfig.js";

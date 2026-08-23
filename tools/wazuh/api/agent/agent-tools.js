@@ -5,7 +5,7 @@ import { logger } from "../../../../utils/logger.js";
 
 const { WAZUH_API_URL } = wazuhApiConfig;
 
-const getAgentList = async () => {
+export const getAgentList = async () => {
     const token = await getToken();
     const baseUrl = WAZUH_API_URL + WAZUH_API_AGENTS_ENDPOINT;
 
@@ -27,4 +27,25 @@ const getAgentList = async () => {
     }
 };
 
-export { getAgentList };
+export const getAgentById = async (agentId) => {
+    const token = await getToken();
+    const baseUrl = `${WAZUH_API_URL}${WAZUH_API_AGENTS_ENDPOINT}?agents_list=${agentId}`;
+    try {
+        const response = await wazuhAxios.get(baseUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 200) {
+            const agent = response.data.data;
+            logger.info("Retrieved agent by ID:", agent);
+            return agent;
+        }
+        logger.error("Failed to retrieve agent by ID. Status code:", response.status);
+        return null;
+    } catch (error) {
+        logger.error("Error retrieving agent by ID:", error.message);
+        return null;
+    }
+};
+
+
