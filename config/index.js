@@ -2,3 +2,4 @@
 
 export { modelConfig} from "./model.js";
 export { opensearchConfig } from "./opensearch.js";
+export { wazuhApiConfig } from "./wazuhapi.js";
