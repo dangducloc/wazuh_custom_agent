@@ -7,7 +7,7 @@ import { wazuhApiConfig } from "../../config/index.js";
 import { WAZUH_API_AUTH_ENDPOINT, wazuhAxios } from "../index.js";
 
 const __dirname = import.meta.dirname;
-const tokenFilePath = path.join(__dirname, "../", "cache", "token.json");
+const tokenFilePath = path.join(__dirname, "../../", "cache", "token.json");
 
 const {
     WAZUH_API_URL,
