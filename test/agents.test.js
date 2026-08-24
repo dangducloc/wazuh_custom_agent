@@ -1,6 +1,6 @@
 // /test/agents.test.js this test file is used to test the fetching of agent information from the Wazuh API and sending it to an AI model for processing. It imports necessary modules, reads environment variables, and exports the fetch agent function for use in other parts of the application.
 import {describe, it} from "node:test";
-import { getAgentList,getAgentById} from "../tools/wazuh/api/agent/agent-tools.js";
+import { getAgentList,getAgentById,assignAgentToGroup,removeAgentFromGroups} from "../tools/wazuh/api/agent/agent-tools.js";
 import { getAgentActiveConfig } from "../tools/wazuh/api/agent/agent-config-tools.js";
 
 describe("agent tools", () => {
@@ -31,7 +31,7 @@ describe("agent tools", () => {
         const configuration = "rootcheck"; // Valid configuration
         const result = await getAgentActiveConfig(agentId, component, configuration);
         // Add assertions here based on the expected result
-        console.log("Fetch agent active config with valid pair result:", result);
+        // console.log("Fetch agent active config with valid pair result:", result);
     });
 
     it("should return an error for invalid component/configuration pair", async () => {
@@ -42,5 +42,21 @@ describe("agent tools", () => {
         // Add assertions here based on the expected result
         // console.log("Fetch agent active config with invalid pair result:", result);
     });
-    
+
+    it("should return a successful response for assign agent to group", async () => {
+        const agentId = "003";
+        const groupId = "test1"; // Replace with an actual group ID
+        const result = await assignAgentToGroup(agentId, groupId);
+        // Add assertions here based on the expected result
+        // console.log("Assign agent to group result:", result);
+    });
+
+    it("should return a successful response for remove agent from groups", async () => {
+        const agentId = "003";
+        const groupIds = ["test1"]; // Replace with actual group IDs
+        const result = await removeAgentFromGroups(agentId, groupIds);
+        // Add assertions here based on the expected result
+        console.log("Remove agent from groups result:", result);
+    });
+
 });

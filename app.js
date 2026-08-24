@@ -29,7 +29,7 @@ try {
       },
       {
         role: "user",
-        content: "check if cluster is healthy and if not, provide the reason",
+        content: "how many agents are connected to the manager?and give me some configurations of the agent thanh",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,
