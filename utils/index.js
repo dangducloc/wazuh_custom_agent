@@ -17,11 +17,7 @@ export {
 } from "./opensearch-endpoints.js";
 
 // export {insecureAgent} from './opensearch-endpoints.js';
-export {
-    WAZUH_API_AGENTS_ENDPOINT,
-    WAZUH_API_AUTH_ENDPOINT,
-    wazuhAxios
-} from "./wazuhapi-endpoints.js";
+export * from "./wazuhapi-endpoints.js";
 
 //format
 export { table2Json } from "./format/table2json.js";

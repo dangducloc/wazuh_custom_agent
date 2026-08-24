@@ -8,6 +8,9 @@ const WAZUH_API_AGENTS_ENDPOINT = "/agents";
 //authenticate endpoint
 const WAZUH_API_AUTH_ENDPOINT = "/security/user/authenticate";
 
+//groups endpoint
+const WAZUH_API_GROUPS_ENDPOINT = "/groups";
+
 import https from "node:https";
 import axios from "axios";
 const wazuhAxios = axios.create({
@@ -17,5 +20,6 @@ const wazuhAxios = axios.create({
 export {
     WAZUH_API_AGENTS_ENDPOINT,
     WAZUH_API_AUTH_ENDPOINT,
+    WAZUH_API_GROUPS_ENDPOINT,
     wazuhAxios, 
 };

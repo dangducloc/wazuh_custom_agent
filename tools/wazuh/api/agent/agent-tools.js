@@ -1,7 +1,7 @@
 // /tools/wazuh/api/agent/agent-tools.js
 import { WAZUH_API_AGENTS_ENDPOINT, getToken, wazuhAxios } from "../../../../utils/index.js";
 import { wazuhApiConfig } from "../../../../config/index.js";
-import { logger } from "../../../../utils/logger.js";
+import { logger } from "../../../../utils/index.js";
 
 const { WAZUH_API_URL } = wazuhApiConfig;
 
