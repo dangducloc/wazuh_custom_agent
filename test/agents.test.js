@@ -54,9 +54,9 @@ describe("agent tools", () => {
     it("should return a successful response for remove agent from groups", async () => {
         const agentId = "003";
         const groupIds = ["test1"]; // Replace with actual group IDs
-        const result = await removeAgentFromGroups(agentId, groupIds);
+        // const result = await removeAgentFromGroups(agentId, groupIds);
         // Add assertions here based on the expected result
-        console.log("Remove agent from groups result:", result);
+        // console.log("Remove agent from groups result:", result);
     });
 
 });

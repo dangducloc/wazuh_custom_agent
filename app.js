@@ -29,7 +29,7 @@ try {
       },
       {
         role: "user",
-        content: "how many agents are connected to the manager?and give me some configurations of the agent thanh",
+        content: "remove agent thanh from group test1",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,
