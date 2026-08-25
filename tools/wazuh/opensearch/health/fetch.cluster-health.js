@@ -1,20 +1,18 @@
 // file /tools/wazuh/opensearch/health/fetch.cluster-health.js this file is used to check the health of the Wazuh agent and related services. It imports necessary modules, reads environment variables, and exports the health check function for use in other parts of the application.
 import { opensearchConfig } from "../../../../config/index.js";
-import {fetch} from "undici";
-import {logger,insecureAgent,CLUSTER_HEALTH_ENDPOINT} from "../../../../utils/index.js";
+import {logger,wazuhAxios,CLUSTER_HEALTH_ENDPOINT} from "../../../../utils/index.js";
 
-const url = `${opensearchConfig.OPENSEARCH_URL}${CLUSTER_HEALTH_ENDPOINT.path}`;
+const url = `${opensearchConfig.OPENSEARCH_URL}${CLUSTER_HEALTH_ENDPOINT}`;
 
 async function checkClusterHealth() {
-    const response = await fetch(url, {
-        dispatcher: insecureAgent,
-        method: CLUSTER_HEALTH_ENDPOINT.method,
-        headers: opensearchConfig.OPENSEARCH_HEADERS,
-    });
-    if (!response.ok) {
-        throw new Error(`Failed to fetch cluster health: ${response.status} ${response.statusText}`);
+    try {
+        const response = await wazuhAxios.get(url, {
+            headers: opensearchConfig.OPENSEARCH_HEADERS
+        });
+        return response.data;
+    } catch (err) {
+        throw new Error(`Failed to fetch cluster health: ${err.response?.status} ${err.response?.statusText}`);
     }
-    return response.json();
 }
 
 export const HealthCheck = async () => {

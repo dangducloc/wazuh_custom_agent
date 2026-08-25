@@ -1,24 +1,20 @@
 // /tools/wazuh/alerts/fetch.alerts-searchs.js
 import { opensearchConfig } from "../../../../config/index.js";
-import { fetch } from "undici";
-import { INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT, logger, insecureAgent} from "../../../../utils/index.js";
+import { INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT,wazuhAxios, logger, insecureAgent} from "../../../../utils/index.js";
 
-const url_search = `${opensearchConfig.OPENSEARCH_URL}${INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT.path}`;
+const url_search = `${opensearchConfig.OPENSEARCH_URL}${INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT}`;
 
 async function fetchAlertsSearch(body) {
-    const response = await fetch(url_search, {
-        dispatcher: insecureAgent,
-        method: INDEX_WAZUH_ALERTS_SEARCH_ENDPOINT.method,
-        headers: opensearchConfig.OPENSEARCH_HEADERS,
-        body: JSON.stringify(body, null, 2),
-    });
-    if (!response.ok) {
-        const detail = await response.text();
+    try {
+        const response = await wazuhAxios.post(url_search, body, {
+            headers: opensearchConfig.OPENSEARCH_HEADERS
+        });
+        return response.data;
+    } catch (err) {
         throw new Error(
-            `Failed to fetch alerts search: ${response.status} ${response.statusText} — ${detail}`
+            `Failed to fetch alerts search: ${err.response?.status} ${err.response?.statusText} — ${JSON.stringify(err.response?.data)}`
         );
     }
-    return response.json();
 };
 
 export const AlertsSearch = async (body) => {
