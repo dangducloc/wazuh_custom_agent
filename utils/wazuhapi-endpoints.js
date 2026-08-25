@@ -1,7 +1,5 @@
 // /utils/wazuhapi-endpoints.js
 
-import { wazuhApiConfig } from "../config/wazuhapi.js";
-
 //agents endpoint
 const WAZUH_API_AGENTS_ENDPOINT = "/agents";
 
