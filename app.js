@@ -29,7 +29,7 @@ try {
       },
       {
         role: "user",
-        content: "remove agent thanh from group test1",
+        content: "create group base on os of each agent and count the number of agents in each group",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,

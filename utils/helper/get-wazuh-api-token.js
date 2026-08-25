@@ -96,3 +96,49 @@ export const getToken = async () => {
 
     return pendingAuth;
 };
+
+export const buildHeaders = async () => ({
+    Authorization: `Bearer ${await getToken()}`,
+});
+
+/**
+ * Generic paginated GET helper for Wazuh list endpoints
+ * (works for /rules, /rules/groups, /rules/requirement/{req}, /rules/files, etc.)
+ *
+ * @param {string} url
+ * @param {Object} [params]
+ * @param {boolean} [fetchAll=true]
+ * @param {number} [pageSize=500]
+ * @returns {Promise<Array>}
+ */
+export const fetchPaginated = async (url, params = {}, fetchAll = true, pageSize = 500) => {
+    const headers = await buildHeaders();
+
+    let offset = 0;
+    const firstResponse = await wazuhAxios.get(url, {
+        headers,
+        params: { ...params, offset, limit: pageSize },
+    });
+
+    if (firstResponse.status !== 200) {
+        throw new Error(`Unexpected status: ${firstResponse.status}`);
+    }
+
+    const { affected_items, total_affected_items } = firstResponse.data.data;
+    let items = [...affected_items];
+
+    if (fetchAll && total_affected_items > items.length) {
+        const requests = [];
+        for (offset = pageSize; offset < total_affected_items; offset += pageSize) {
+            requests.push(
+                wazuhAxios.get(url, { headers, params: { ...params, offset, limit: pageSize } })
+            );
+        }
+        const responses = await Promise.all(requests);
+        for (const res of responses) {
+            items = items.concat(res.data.data.affected_items);
+        }
+    }
+
+    return items;
+};
