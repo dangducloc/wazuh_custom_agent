@@ -13,7 +13,7 @@ import { logger } from "../utils/index.js";
 
 const TEST_FILE = "agent_test_rules.xml";
 const TEST_RULE_ID = "119999";
-const TEST_XML = `<group name="agent_test,">
+const TEST_XML = `<group name="agent_test">
   <rule id="${TEST_RULE_ID}" level="3">
     <match>AGENT_TEST_TRIGGER_STRING</match>
     <description>Agent integration test rule.</description>
@@ -83,33 +83,85 @@ describe("rules tools", () => {
     });
 
     it("should upload, read back and delete a custom rule file", async () => {
-        // ensure clean slate
+        // Ensure clean slate — ignore 404 if absent
         await deleteRuleFile(TEST_FILE).catch(() => {});
 
-        // upload (create)
-        await updateRuleFile(TEST_FILE, TEST_XML);
+        logger.info("Uploading test rule file...");
 
-        // read back and verify our rule is present
-        const content = await getRuleFileContent(TEST_FILE);
-        if (!content.includes(TEST_RULE_ID)) {
+        // overwrite:true is safer — protects against a prior run that didn't clean up
+        const uploadResult = await updateRuleFile(TEST_FILE, TEST_XML, {
+            overwrite: true,
+        });
+        logger.info({ uploadResult }, "Upload result");
+
+        // ------------------------------------------------------------------
+        // Discover where Wazuh stored the file. Uploaded rules land in
+        // etc/rules/ but we should not hard-code that — let the API tell us.
+        // ------------------------------------------------------------------
+        logger.info("Resolving uploaded file location...");
+        const allFiles = await listRuleFiles({}, true, 500);
+        const meta = allFiles.find((f) => f.filename === TEST_FILE);
+
+        if (!meta) {
             throw new Error(
-                `Uploaded rule file does not contain rule ${TEST_RULE_ID}`,
+                `Uploaded file "${TEST_FILE}" not found in GET /rules/files listing. ` +
+                    `Upload may have failed silently or Wazuh hasn't indexed it yet.`,
             );
         }
 
-        // verify rule is loaded via API filter
-        const matched = await listRules(
-            { rule_ids: TEST_RULE_ID },
-            false,
-            10,
+        logger.info(
+            {
+                filename: meta.filename,
+                relative_dirname: meta.relative_dirname,
+            },
+            "Resolved file location",
         );
-        if (!matched.some((r) => String(r.id) === TEST_RULE_ID)) {
-            throw new Error(`Rule ${TEST_RULE_ID} not found via /rules`);
-        }
-        logger.info({ id: TEST_RULE_ID }, "Custom rule uploaded & loaded");
 
-        // cleanup
-        await deleteRuleFile(TEST_FILE);
+        // Read back raw XML — now we have the correct relative_dirname
+        logger.info("Reading uploaded rule file...");
+        const content = await getRuleFileContent(
+            TEST_FILE,
+            meta.relative_dirname,
+        );
+
+        logger.info(
+            { filename: TEST_FILE, length: content?.length },
+            "Uploaded file content",
+        );
+
+        if (typeof content !== "string") {
+            throw new Error(`Expected string content, got ${typeof content}`);
+        }
+
+        if (!content.includes(TEST_RULE_ID)) {
+            throw new Error(
+                `Uploaded rule file does not contain rule ID ${TEST_RULE_ID}`,
+            );
+        }
+
+        // ------------------------------------------------------------------
+        // Verify Wazuh loaded the rule into its active rule set
+        // ------------------------------------------------------------------
+        logger.info(
+            { ruleId: TEST_RULE_ID },
+            "Checking whether Wazuh loaded the rule",
+        );
+
+        const matched = await listRules({ rule_ids: TEST_RULE_ID }, false, 10);
+
+        logger.info({ count: matched.length, matched }, "Matched rules");
+
+        if (!matched.some((r) => String(r.id) === TEST_RULE_ID)) {
+            throw new Error(
+                `Rule ${TEST_RULE_ID} uploaded but not found via GET /rules — ` +
+                    `Wazuh manager may need a restart to reload rules.`,
+            );
+        }
+
+        logger.info({ id: TEST_RULE_ID }, "Custom rule uploaded & loaded ✓");
+
+        // Cleanup
+        await deleteRuleFile(TEST_FILE, meta.relative_dirname);
         logger.info({ filename: TEST_FILE }, "Cleanup done");
     });
 });

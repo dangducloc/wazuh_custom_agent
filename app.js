@@ -6,11 +6,11 @@ import { wazuhToolDefinitions, wazuhToolHandlers } from "./tools/descriptions.js
 import {modelConfig} from "./config/index.js"
 
 
-const MODEL = modelConfig.MODEL ;
+const MODEL = modelConfig.cloudflare.model ;
 
 const client = new CloudflareAI({
-  accountId: modelConfig.CLOUDFLARE_ACCOUNT_ID,
-  authToken: modelConfig.CLOUDFLARE_AUTH_TOKEN,
+  accountId: modelConfig.cloudflare.accountId,
+  authToken: modelConfig.cloudflare.authToken,
 });
 
 client.registerTools(wazuhToolHandlers);

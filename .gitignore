@@ -2,3 +2,4 @@
 /logs
 /node_modules
 cache/token.json
+test/agent_test_rules.xml
