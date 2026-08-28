@@ -1,6 +1,7 @@
 // app.js
 import "dotenv/config";
 import { ProviderRegistry, chatWithFallback } from "./model/compatible-ai.js";
+import { SYSTEM_PROMPT } from "./model/system-prompts.js";
 import { logger } from "./utils/index.js";
 import { wazuhToolDefinitions, wazuhToolHandlers } from "./tools/descriptions.js";
 import { modelConfig } from "./config/index.js";
@@ -36,7 +37,7 @@ if (modelConfig.cloudflare?.baseUrl) {
     baseUrl: modelConfig.cloudflare.baseUrl,
     apiKey: modelConfig.cloudflare.authToken,
     model: modelConfig.cloudflare.model,
-    priority: 10,
+    priority: 9,
     tags: ["cloud", "reliable-tools"],
   });
 }
@@ -46,7 +47,7 @@ if (modelConfig.nvidia?.url) {
     baseUrl: modelConfig.nvidia.url,
     apiKey: modelConfig.nvidia.apiKey,
     model: modelConfig.nvidia.model,
-    priority: 9,
+    priority: 10,
     tags: ["cloud", "fast-inference"],
   });
 }
@@ -65,12 +66,11 @@ try {
     messages: [
       {
         role: "system",
-        content:
-          "You are an AI threat hunting agent for Wazuh. Always check the mapping/index before searching if you are not sure about field names.",
+        content: SYSTEM_PROMPT,
       },
       {
         role: "user",
-        content: "how many rules are there in the system?",
+        content: "delete rules with id 101001 and 101000",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,
