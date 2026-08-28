@@ -70,7 +70,8 @@ export const toolDefinitions = [
                 },
                 q: {
                     type: "string",
-                    description: "Wazuh query-language filter (e.g. `name~Execution`).",
+                    description:
+                        "Wazuh query-language filter (e.g. `name~Execution`).",
                 },
                 search: {
                     type: "string",
@@ -86,7 +87,10 @@ export const toolDefinitions = [
             "Retrieve MITRE ATT&CK techniques and sub-techniques (e.g. `T1059` Command and Scripting " +
             "Interpreter, `T1059.001` PowerShell). This is the primary lookup for mapping ids found " +
             "in Wazuh alerts (`rule.mitre.id`) to human-readable names and descriptions during " +
-            "threat analysis. Omit `technique_ids` to list the full catalog.",
+            "threat analysis. Omit `technique_ids` to list the full catalog.\n\n" +
+            "IMPORTANT: to look up a known technique id, put it in `technique_ids` — do NOT use `q` " +
+            "for id lookups. `q` uses Wazuh query syntax with `=`/`!=`/`~` operators " +
+            '(e.g. `q: "name~PowerShell"`), never `field:value`.',
         input_schema: {
             type: "object",
             properties: {
@@ -94,17 +98,18 @@ export const toolDefinitions = [
                     type: "array",
                     items: { type: "string", pattern: TECHNIQUE_ID_PATTERN },
                     description:
-                        "Technique or sub-technique ids, e.g. `[\"T1059\", \"T1078\", \"T1059.001\"]`. " +
+                        'Technique or sub-technique ids, e.g. `["T1059", "T1078", "T1059.001"]`. ' +
                         "Omit or pass an empty array to list all techniques.",
                 },
                 q: {
                     type: "string",
-                    description: "Wazuh query-language filter for the technique fields.",
+                    description:
+                        "Wazuh query-language filter for the technique fields.",
                 },
                 search: {
                     type: "string",
                     description:
-                        "Free-text search across technique names/descriptions (e.g. \"powershell\").",
+                        'Free-text search across technique names/descriptions (e.g. "powershell").',
                 },
             },
             additionalProperties: false,
@@ -127,11 +132,13 @@ export const toolDefinitions = [
                 },
                 q: {
                     type: "string",
-                    description: "Wazuh query-language filter for the mitigation fields.",
+                    description:
+                        "Wazuh query-language filter for the mitigation fields.",
                 },
                 search: {
                     type: "string",
-                    description: "Free-text search across mitigation names/descriptions.",
+                    description:
+                        "Free-text search across mitigation names/descriptions.",
                 },
             },
             additionalProperties: false,
@@ -166,11 +173,13 @@ toolDefinitions.push(
                 },
                 q: {
                     type: "string",
-                    description: "Wazuh query-language filter for the software fields.",
+                    description:
+                        "Wazuh query-language filter for the software fields.",
                 },
                 search: {
                     type: "string",
-                    description: "Free-text search across software names/descriptions.",
+                    description:
+                        "Free-text search across software names/descriptions.",
                 },
             },
             additionalProperties: false,
@@ -194,11 +203,13 @@ toolDefinitions.push(
                 },
                 q: {
                     type: "string",
-                    description: "Wazuh query-language filter for the group fields.",
+                    description:
+                        "Wazuh query-language filter for the group fields.",
                 },
                 search: {
                     type: "string",
-                    description: "Free-text search across group names/descriptions.",
+                    description:
+                        "Free-text search across group names/descriptions.",
                 },
             },
             additionalProperties: false,
@@ -221,11 +232,13 @@ toolDefinitions.push(
                 },
                 q: {
                     type: "string",
-                    description: "Wazuh query-language filter for the reference fields.",
+                    description:
+                        "Wazuh query-language filter for the reference fields.",
                 },
                 search: {
                     type: "string",
-                    description: "Free-text search across reference fields (e.g. a URL fragment).",
+                    description:
+                        "Free-text search across reference fields (e.g. a URL fragment).",
                 },
             },
             additionalProperties: false,

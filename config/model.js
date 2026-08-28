@@ -15,7 +15,7 @@ const GATEWAY = process.env.GATEWAY || "Missing GATEWAY environment variable";
 // console.log("CLOUDFLARE_AUTH_TOKEN:", CLOUDFLARE_AUTH_TOKEN);
 // console.log("GATEWAY:", GATEWAY);
 
-const MODEL = process.env.MODEL || "Missing MODEL environment variable";
+const MODEL = process.env.CF_MODEL || "Missing MODEL environment variable";
 const aigateway = createAiGateway({
   accountId: CLOUDFLARE_ACCOUNT_ID,
   gateway: GATEWAY,

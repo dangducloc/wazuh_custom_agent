@@ -29,7 +29,7 @@ try {
       },
       {
         role: "user",
-        content: "create group base on os of each agent and count the number of agents in each group",
+        content: "try to create a new rule to ping test ",
       },
     ],
     toolDefinitions: wazuhToolDefinitions,

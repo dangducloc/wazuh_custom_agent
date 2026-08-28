@@ -84,8 +84,8 @@ export const toolDefinitions = [
                     type: "string",
                     pattern: RULE_LEVEL_PATTERN,
                     description:
-                        "Filter by rule level: a single level `0`-`16` (e.g. \"12\") or an inclusive " +
-                        "range (e.g. \"5-16\"). Higher is more severe.",
+                        'Filter by rule level: a single level `0`-`16` (e.g. "12") or an inclusive ' +
+                        'range (e.g. "5-16"). Higher is more severe.',
                 },
                 filename: {
                     type: "string",
@@ -108,7 +108,8 @@ export const toolDefinitions = [
                     type: "array",
                     items: { type: "string" },
                     description:
-                        "Fields to include in each returned rule, e.g. `[\"id\", \"description\", \"level\"]`. " +
+                        'Fields to include in each returned rule, e.g. `["id", "description", "level", "groups"]`. ' +
+                        "Note: the field is `groups` (plural, array) — NOT `group`, which is a separate filter param. " +
                         "Use to shrink large responses.",
                 },
             },
@@ -126,7 +127,8 @@ export const toolDefinitions = [
             properties: {
                 q: {
                     type: "string",
-                    description: "Wazuh query-language filter for the group names.",
+                    description:
+                        "Wazuh query-language filter for the group names.",
                 },
                 search: {
                     type: "string",
@@ -234,8 +236,8 @@ export const toolDefinitions = [
                 xml_content: {
                     type: "string",
                     description:
-                        "Complete raw XML of the rule file: a `<group name=\"...\">` root containing " +
-                        "`<rule id=\"...\" level=\"...\">` blocks. Rule ids 100000-120000 are reserved " +
+                        'Complete raw XML of the rule file: a `<group name="...">` root containing ' +
+                        '`<rule id="..." level="...">` blocks. Rule ids 100000-120000 are reserved ' +
                         "for local/custom rules.",
                 },
                 overwrite: {
@@ -284,6 +286,10 @@ export const toolDefinitions = [
     },
 ];
 
+const SELECT_FIELD_ALIASES = { group: "groups" };
+const normalizeSelect = (select = []) =>
+    select.map((f) => SELECT_FIELD_ALIASES[f] ?? f);
+
 export const toolHandlers = {
     get_rule_list: ({
         rule_ids,
@@ -303,7 +309,7 @@ export const toolHandlers = {
             ...(filename && { filename }),
             ...(q && { q }),
             ...(search && { search }),
-            ...(select?.length && { select: select.join(",") }),
+            ...(select?.length && { select: normalizeSelect(select).join(",") }),
         }),
     get_rule_groups: ({ q, search } = {}) =>
         listRuleGroups({
