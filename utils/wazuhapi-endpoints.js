@@ -18,6 +18,9 @@ const WAZUH_API_MITRE_ENDPOINT = "/mitre";
 //sca endpoint
 const WAZUH_API_SCA_ENDPOINT = "/sca";
 
+//syscheck endpoint
+const WAZUH_API_SYSCHECK_ENDPOINT = "/syscheck";
+
 import https from "node:https";
 import axios from "axios";
 const wazuhAxios = axios.create({
@@ -31,5 +34,6 @@ export {
     WAZUH_API_RULES_ENDPOINT,
     WAZUH_API_MITRE_ENDPOINT,
     WAZUH_API_SCA_ENDPOINT,
+    WAZUH_API_SYSCHECK_ENDPOINT,
     wazuhAxios, 
 };
