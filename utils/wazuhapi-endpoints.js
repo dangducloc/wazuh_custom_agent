@@ -15,6 +15,9 @@ const WAZUH_API_RULES_ENDPOINT = "/rules";
 //mitre endpoint
 const WAZUH_API_MITRE_ENDPOINT = "/mitre";
 
+//sca endpoint
+const WAZUH_API_SCA_ENDPOINT = "/sca";
+
 import https from "node:https";
 import axios from "axios";
 const wazuhAxios = axios.create({
@@ -27,5 +30,6 @@ export {
     WAZUH_API_GROUPS_ENDPOINT,
     WAZUH_API_RULES_ENDPOINT,
     WAZUH_API_MITRE_ENDPOINT,
+    WAZUH_API_SCA_ENDPOINT,
     wazuhAxios, 
 };

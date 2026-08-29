@@ -3,7 +3,6 @@ export { logger } from "./logger.js";
 
 export * from "./opensearch-endpoints.js";
 
-// export {insecureAgent} from './opensearch-endpoints.js';
 export * from "./wazuhapi-endpoints.js";
 
 //format
