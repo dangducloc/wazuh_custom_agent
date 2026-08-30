@@ -5,6 +5,8 @@ export * from "./opensearch-endpoints.js";
 
 export * from "./wazuhapi-endpoints.js";
 
+export * from "./helper/xml-checker.js";
+
 //format
 export { table2Json } from "./format/table2json.js";
 

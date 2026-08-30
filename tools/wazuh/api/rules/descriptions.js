@@ -28,6 +28,7 @@ import {
     updateRuleFile,
     deleteRuleFile,
 } from "./rule-tools.js";
+import { validateRuleFile } from "../../../../utils/index.js";
 
 // Wazuh rule level: 0–16, either a single level ("4") or a range ("5-8").
 const RULE_LEVEL_PATTERN = "^\\d{1,2}(-\\d{1,2})?$";
@@ -216,6 +217,31 @@ export const toolDefinitions = [
         },
     },
     {
+        name: "validate_rule_file",
+        description:
+            "Validate a Wazuh custom rule file's XML BEFORE writing it with `upload_rule_file`. " +
+            "Checks that the content is well-formed XML with a root `<group>` element, that every " +
+            "`<rule>` has a numeric `id` in the 100000-120000 custom range and a `level` 0-16, and " +
+            "flags the most common authoring mistake: using the plural `<groups>` tag instead of " +
+            "the correct singular `<group>` for group membership inside a `<rule>` block " +
+            "(this passes XML parsing but makes wazuh-analysisd fail to load the rule at runtime). " +
+            "Returns `{ valid: boolean, errors: string[] }` — always call this before " +
+            "`upload_rule_file` when generating or editing rule XML from scratch.",
+        input_schema: {
+            type: "object",
+            properties: {
+                xml_content: {
+                    type: "string",
+                    description:
+                        "The raw rule file XML to validate — same content you would pass to " +
+                        "`upload_rule_file`.",
+                },
+            },
+            required: ["xml_content"],
+            additionalProperties: false,
+        },
+    },
+    {
         name: "upload_rule_file",
         description:
             "Create or replace a rule file on the Wazuh manager with the given raw XML content. " +
@@ -309,7 +335,9 @@ export const toolHandlers = {
             ...(filename && { filename }),
             ...(q && { q }),
             ...(search && { search }),
-            ...(select?.length && { select: normalizeSelect(select).join(",") }),
+            ...(select?.length && {
+                select: normalizeSelect(select).join(","),
+            }),
         }),
     get_rule_groups: ({ q, search } = {}) =>
         listRuleGroups({
@@ -336,6 +364,7 @@ export const toolHandlers = {
             overwrite,
             relativeDirname: relative_dirname,
         }),
+    validate_rule_file: ({ xml_content }) => validateRuleFile(xml_content),
     delete_rule_file: ({ filename, relative_dirname }) =>
         deleteRuleFile(filename, relative_dirname),
 };
