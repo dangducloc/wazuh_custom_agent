@@ -7,6 +7,8 @@ export * from "./wazuhapi-endpoints.js";
 
 export * from "./helper/xml-checker.js";
 
+export * from "./helper/summarizeIfLarge.js";
+
 //format
 export { table2Json } from "./format/table2json.js";
 
