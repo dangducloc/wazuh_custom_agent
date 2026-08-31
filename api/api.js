@@ -13,10 +13,10 @@ api.get("/health", (req, res) => {
 });
 
 api.post("/chat", (req, res) => {
+    let message = req.body?.message;
     if (!message) {
         return res.status(400).json({ error: "Message is required for chat." });
     }
-    const message = req.body?.message;
     if (typeof message !== "string") {
         return res.status(400).json({ error: "Message must be a string." });
     }
