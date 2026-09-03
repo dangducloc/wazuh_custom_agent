@@ -1,5 +1,6 @@
 /.env
 /logs
 /node_modules
+/data
 cache/token.json
 test/agent_test_rules.xml

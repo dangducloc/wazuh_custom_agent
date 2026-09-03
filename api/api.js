@@ -1,5 +1,7 @@
 import express from "express";
+import { randomUUID } from "crypto";
 import { chat } from "./chat.js";
+import { agentMemory } from "../memory/agent-memory.js";
 
 const api = express();
 api.use(express.json());
@@ -10,6 +12,22 @@ api.get("/", (req, res) => {
 
 api.get("/health", (req, res) => {
     res.json({ status: "ok" });
+});
+
+// Create a new session (optional - you can pass any sessionId you like to /chat)
+api.post("/session/new", (req, res) => {
+    const sessionId = randomUUID();
+    agentMemory.getHistory(sessionId); // initialize empty history + persist
+    res.json({ sessionId });
+});
+
+api.get("/session/list", (req, res) => {
+    res.json({ sessions: agentMemory.listSessions() });
+});
+
+api.delete("/session/:id", (req, res) => {
+    agentMemory.deleteSession(req.params.id);
+    res.json({ deleted: req.params.id });
 });
 
 api.post("/chat", (req, res) => {
@@ -24,8 +42,10 @@ api.post("/chat", (req, res) => {
         return res.status(400).json({ error: "Message cannot be empty." });
     }
 
-    chat(message)
-        .then((reply) => res.json({ reply }))
+    const sessionId = req.body?.sessionId || "default";
+
+    chat(message, sessionId)
+        .then((reply) => res.json({ reply, sessionId }))
         .catch((err) => res.status(500).json({ error: err.message }));
 });
 
