@@ -4,3 +4,5 @@
 /data
 cache/token.json
 test/agent_test_rules.xml
+*.html
+agent*.json

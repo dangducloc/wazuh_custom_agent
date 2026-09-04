@@ -2,8 +2,13 @@
 //
 // Wazuh agent-related tool definitions.
 // Each entry describes a callable tool: its name, a natural-language description
-// for the model, the JSON Schema for its parameters, plus a handler that
-// dispatches to the implementation in `agent-tools.js` / `agent-config-tools.js`.
+// for the model, the JSON Schema for its input, plus a handler that dispatches
+// to the implementation in `agent-tools.js` / `agent-config-tools.js`.
+//
+// Schema key convention: the model client (`model/cloudflare-ai.js`) reads
+// `def.input_schema` when building the tool payload. `compatible-ai.js` also
+// reads `def.input_schema` (line 64) and remaps it to `parameters` for the
+// wire format only. Internal code never touches the `parameters` key.
 //
 // Parameter naming convention: snake_case throughout, matching the Wazuh REST
 // API and the rest of this repo's tooling. The model defaults to snake_case
@@ -62,7 +67,7 @@ export const toolDefinitions = [
             "Returns each agent's id, name, ip, status (active / disconnected / never-connected / pending), " +
             "operating system, version, last keepalive, and group memberships. " +
             "Use this to discover agent ids before calling other agent-specific tools.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {},
             additionalProperties: false,
@@ -75,7 +80,7 @@ export const toolDefinitions = [
             "Returns the same shape of object as one entry in `get_agent_list` (id, name, ip, status, " +
             "os, version, last keepalive, group list). Use this when you already know the agent id and want " +
             "to avoid pulling the full list. Returns `null` on transport / non-200 failures or if the id is unknown.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {
                 agent_id: {
@@ -100,7 +105,7 @@ export const toolDefinitions = [
             "`wmodules/wmodules`. Note: `analysis`, `monitor`, `request`, `mail`, `auth` exist only on the manager " +
             "(agent id `000`); `agent`, `agentless`, `csyslog`, `integrator` exist only on real agents. " +
             "Returns the parsed configuration object, or `null` if the combination is invalid or the request fails.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {
                 agent_id: {
@@ -139,7 +144,7 @@ export const toolDefinitions = [
             "Returns `true` on success, `false` on any failure (auth, validation, group not found, etc.). " +
             "Calling this for an agent already in the group is a no-op success. " +
             "To assign an agent to multiple groups, call this tool once per group.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {
                 agent_id: {
@@ -170,7 +175,7 @@ export const toolDefinitions = [
             "memberships are cleared. The underlying call uses `wait_for_complete=true`, so the response " +
             "reflects the final state. Returns `true` on success, `false` on failure. " +
             "Like `assign_agent_to_group`, do NOT target `agent_id` `000`.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {
                 agent_id: {

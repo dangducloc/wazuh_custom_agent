@@ -2,8 +2,13 @@
 //
 // Wazuh group-management tool definitions.
 // Each entry describes a callable tool: its name, a natural-language description
-// for the model, the JSON Schema for its parameters, plus a handler that
-// dispatches to the implementation in `groups-tools.js`.
+// for the model, the JSON Schema for its input, plus a handler that dispatches
+// to the implementation in `groups-tools.js`.
+//
+// Schema key convention: the model client (`model/cloudflare-ai.js`) reads
+// `def.input_schema` when building the tool payload. `compatible-ai.js` also
+// reads `def.input_schema` (line 64) and remaps it to `parameters` for the
+// wire format only. Internal code never touches the `parameters` key.
 //
 // All handlers come back as `null` on transport / non-200 failures — surface
 // that explicitly so the model can react instead of treating null as success.
@@ -22,7 +27,7 @@ export const toolDefinitions = [
             "Retrieve the list of all agent groups registered on the Wazuh manager. " +
             "Returns each group's name, count of assigned agents, and a merged-config hash. " +
             "Use this to discover existing group names before creating, deleting, or assigning agents to groups.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {},
             additionalProperties: false,
@@ -35,7 +40,7 @@ export const toolDefinitions = [
             "Returns the created group's metadata on success. The group_id must be unique and match " +
             "the Wazuh naming rules (alphanumeric, `-`, `_`, `.`; 1–128 chars). " +
             "If a group with the same id already exists, the Wazuh API returns an error and this tool returns `null`.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {
                 group_id: {
@@ -55,7 +60,7 @@ export const toolDefinitions = [
             "Delete one or more agent groups from the Wazuh manager in a single request. " +
             "Group ids are sent as a comma-separated list. Deleting a non-existent group is treated as an error " +
             "by the Wazuh API and surfaces as `null` here. Pass multiple ids in one call rather than issuing per-id calls.",
-        parameters: {
+        input_schema: {
             type: "object",
             properties: {
                 group_ids: {
