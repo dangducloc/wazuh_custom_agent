@@ -1,22 +1,21 @@
 // /tools/wazuh/opensearch/alerts/fetch.wazuh-alert-indexs.js
 import { opensearchConfig } from "../../../../config/index.js";
-import { fetch } from "undici";
-import { WAZUH_ALERTS_ENDPOINT, insecureAgent, table2Json } from "../../../../utils/index.js";
+import { WAZUH_ALERTS_ENDPOINT, wazuhAxios, table2Json } from "../../../../utils/index.js";
 import { logger } from "../../../../utils/index.js";
 
-const url = `${opensearchConfig.OPENSEARCH_URL}${WAZUH_ALERTS_ENDPOINT.path}`;
+const url = `${opensearchConfig.OPENSEARCH_URL}${WAZUH_ALERTS_ENDPOINT}`;
 
 async function fetchIndexs() {
-    const response = await fetch(url, {
-        dispatcher: insecureAgent,
-        method: WAZUH_ALERTS_ENDPOINT.method,
-        headers: opensearchConfig.OPENSEARCH_HEADERS,
-    });
-    if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(`Failed to fetch indexs: ${response.status} ${response.statusText} — ${detail}`);
+    try {
+        const response = await wazuhAxios.get(url, {
+            headers: opensearchConfig.OPENSEARCH_HEADERS
+        });
+        return table2Json(response.data);
+    } catch (err) {
+        throw new Error(
+            `Failed to fetch indexs: ${err.response?.status} ${err.response?.statusText} — ${JSON.stringify(err.response?.data)}`
+        );
     }
-    return table2Json(await response.text());
 }
 
 export const IndexsInfo = async () => {
