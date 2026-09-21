@@ -5,3 +5,4 @@
 cache/token.json
 test/agent_test_rules.xml
 /architecture/*
+/graphify*

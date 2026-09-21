@@ -1,5 +1,6 @@
 // memory/agent-memory.js
 import fs from "fs";
+import fsp from "fs/promises";
 import path from "path";
 import { logger } from "../utils/index.js";
 
@@ -9,6 +10,14 @@ import { logger } from "../utils/index.js";
 // - Long-term: key-value facts persisted to a JSON file (seenAlerts, notes, ...).
 // - Routing: decides whether related facts need to be "recalled" into the context,
 //   using regex first (cheap), avoiding always stuffing all facts into the prompt.
+//
+// Changes vs. v1:
+//   - Async + atomic writes (tmp file + rename) so a crash mid-write never
+//     corrupts the JSON store.
+//   - TTL-based pruning for seenAlerts, notes, and idle sessions, so the
+//     store doesn't grow unbounded under high Wazuh alert volume.
+//   - Pluggable `summarizer` function instead of a hardcoded TODO.
+//   - Shared load/save helpers (DRY), plus a `forgetAlert`/`forgetNote` API.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DEFAULT_RECALL_PATTERNS = [
@@ -28,46 +37,103 @@ export class AgentMemory {
     maxHistoryMessages = 20,
     recallPatterns = DEFAULT_RECALL_PATTERNS,
     saveDebounceMs = 500,
+    // Pruning / retention config
+    alertTtlMs = 30 * 24 * 60 * 60 * 1000,   // keep seenAlerts 30 days
+    noteTtlMs = 90 * 24 * 60 * 60 * 1000,    // keep notes 90 days
+    maxNotes = 500,
+    sessionIdleTtlMs = 7 * 24 * 60 * 60 * 1000, // drop sessions idle 7 days
+    maxSessions = 1000,
+    // Optional async fn(oldMessages) => string, for real summarization.
+    // Falls back to a naive truncated concat if not provided.
+    summarizer = null,
   } = {}) {
     this.factsFile = factsFile;
     this.sessionsFile = sessionsFile;
     this.maxHistoryMessages = maxHistoryMessages;
     this.recallPatterns = recallPatterns;
     this.saveDebounceMs = saveDebounceMs;
-    this._saveTimer = null;
 
-    this.sessions = this._loadSessions(); // sessionId -> [{role, content}, ...]
-    this.facts = this._loadFacts();
+    this.alertTtlMs = alertTtlMs;
+    this.noteTtlMs = noteTtlMs;
+    this.maxNotes = maxNotes;
+    this.sessionIdleTtlMs = sessionIdleTtlMs;
+    this.maxSessions = maxSessions;
+    this.summarizer = summarizer;
+
+    this._sessionSaveTimer = null;
+    this._factsSaveTimer = null;
+    this._factsDirty = false;
+
+    // sessionId -> { messages: [{role, content}], lastActiveAt: number }
+    this.sessions = this._loadJsonSync(this.sessionsFile, () => new Map(), (raw) => {
+      const map = new Map();
+      for (const [id, v] of Object.entries(raw)) {
+        // backward-compat: old format was a bare array of messages
+        map.set(id, Array.isArray(v) ? { messages: v, lastActiveAt: Date.now() } : v);
+      }
+      return map;
+    });
+
+    this.facts = this._loadJsonSync(
+      this.factsFile,
+      () => ({ seenAlerts: {}, resolvedGroups: {}, notes: [] }),
+      (raw) => raw
+    );
+
+    this._pruneExpired(); // best-effort cleanup on boot
+  }
+
+  // ── Shared load/save helpers ─────────────────────────────────────────────
+  _loadJsonSync(file, makeDefault, transform) {
+    try {
+      if (fs.existsSync(file)) {
+        const raw = JSON.parse(fs.readFileSync(file, "utf-8"));
+        return transform(raw);
+      }
+    } catch (err) {
+      logger.error({ err: err.message, file }, "[Memory] Failed to load file, starting fresh");
+    }
+    return makeDefault();
+  }
+
+  async _atomicWrite(file, data) {
+    const dir = path.dirname(file);
+    await fsp.mkdir(dir, { recursive: true });
+    const tmp = path.join(dir, `.${path.basename(file)}.${process.pid}.tmp`);
+    await fsp.writeFile(tmp, JSON.stringify(data, null, 2));
+    await fsp.rename(tmp, file); // atomic on same filesystem
   }
 
   // ── Short-term: session history (persisted to file) ─────────────────────
-  _loadSessions() {
-    try {
-      if (fs.existsSync(this.sessionsFile)) {
-        const raw = JSON.parse(fs.readFileSync(this.sessionsFile, "utf-8"));
-        return new Map(Object.entries(raw));
-      }
-    } catch (err) {
-      logger.error({ err: err.message }, "[Memory] Failed to load sessions file, starting fresh");
-    }
-    return new Map();
-  }
-
-  // Debounce so we don't write the file on every turn when requests flood in
   _scheduleSaveSessions() {
-    if (this._saveTimer) clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(() => this._saveSessionsNow(), this.saveDebounceMs);
+    if (this._sessionSaveTimer) clearTimeout(this._sessionSaveTimer);
+    this._sessionSaveTimer = setTimeout(() => {
+      this._saveSessionsNow().catch((err) =>
+        logger.error({ err: err.message }, "[Memory] Failed to persist sessions")
+      );
+    }, this.saveDebounceMs);
   }
 
-  _saveSessionsNow() {
-    fs.mkdirSync(path.dirname(this.sessionsFile), { recursive: true });
+  async _saveSessionsNow() {
     const obj = Object.fromEntries(this.sessions);
-    fs.writeFileSync(this.sessionsFile, JSON.stringify(obj, null, 2));
+    await this._atomicWrite(this.sessionsFile, obj);
+  }
+
+  /** Force-flush pending writes, e.g. on graceful shutdown. */
+  async flush() {
+    if (this._sessionSaveTimer) clearTimeout(this._sessionSaveTimer);
+    if (this._factsSaveTimer) clearTimeout(this._factsSaveTimer);
+    await this._saveSessionsNow();
+    if (this._factsDirty) await this._saveFactsNow();
   }
 
   getHistory(sessionId) {
-    if (!this.sessions.has(sessionId)) this.sessions.set(sessionId, []);
-    return this.sessions.get(sessionId);
+    if (!this.sessions.has(sessionId)) {
+      this.sessions.set(sessionId, { messages: [], lastActiveAt: Date.now() });
+    }
+    const entry = this.sessions.get(sessionId);
+    entry.lastActiveAt = Date.now();
+    return entry.messages;
   }
 
   listSessions() {
@@ -79,49 +145,95 @@ export class AgentMemory {
     this._scheduleSaveSessions();
   }
 
-  addTurn(sessionId, role, content) {
+  async addTurn(sessionId, role, content) {
     const history = this.getHistory(sessionId);
     history.push({ role, content });
 
     if (history.length > this.maxHistoryMessages) {
       const dropped = history.splice(0, history.length - this.maxHistoryMessages);
-      const summary = this._summarize(dropped);
+      const summary = await this._summarize(dropped);
       history.unshift({ role: "system", content: `[Previous conversation summary]: ${summary}` });
       logger.info({ sessionId }, "[Memory] Trimmed session history");
     }
 
+    this._enforceSessionCap();
     this._scheduleSaveSessions();
   }
 
-  // ── Long-term: facts persisted to file ──────────────────────────────────
-  _loadFacts() {
-    try {
-      if (fs.existsSync(this.factsFile)) {
-        return JSON.parse(fs.readFileSync(this.factsFile, "utf-8"));
-      }
-    } catch (err) {
-      logger.error({ err: err.message }, "[Memory] Failed to load facts file, starting fresh");
+  /** Drop oldest idle sessions beyond maxSessions / sessionIdleTtlMs. */
+  _enforceSessionCap() {
+    const now = Date.now();
+    for (const [id, entry] of this.sessions) {
+      if (now - entry.lastActiveAt > this.sessionIdleTtlMs) this.sessions.delete(id);
     }
-    return { seenAlerts: {}, resolvedGroups: {}, notes: [] };
+    if (this.sessions.size > this.maxSessions) {
+      const sorted = [...this.sessions.entries()].sort(
+        (a, b) => a[1].lastActiveAt - b[1].lastActiveAt
+      );
+      const excess = sorted.length - this.maxSessions;
+      for (let i = 0; i < excess; i++) this.sessions.delete(sorted[i][0]);
+    }
   }
 
-  _saveFacts() {
-    fs.mkdirSync(path.dirname(this.factsFile), { recursive: true });
-    fs.writeFileSync(this.factsFile, JSON.stringify(this.facts, null, 2));
+  // ── Long-term: facts persisted to file ──────────────────────────────────
+  _scheduleSaveFacts() {
+    this._factsDirty = true;
+    if (this._factsSaveTimer) clearTimeout(this._factsSaveTimer);
+    this._factsSaveTimer = setTimeout(() => {
+      this._saveFactsNow().catch((err) =>
+        logger.error({ err: err.message }, "[Memory] Failed to persist facts")
+      );
+    }, this.saveDebounceMs);
+  }
+
+  async _saveFactsNow() {
+    await this._atomicWrite(this.factsFile, this.facts);
+    this._factsDirty = false;
   }
 
   rememberAlert(alertId, { ruleId, action } = {}) {
     this.facts.seenAlerts[alertId] = { ruleId, action, ts: Date.now() };
-    this._saveFacts();
+    this._scheduleSaveFacts();
   }
 
   hasSeenAlert(alertId) {
     return Object.prototype.hasOwnProperty.call(this.facts.seenAlerts, alertId);
   }
 
+  forgetAlert(alertId) {
+    delete this.facts.seenAlerts[alertId];
+    this._scheduleSaveFacts();
+  }
+
   addNote(note) {
     this.facts.notes.push({ note, ts: Date.now() });
-    this._saveFacts();
+    if (this.facts.notes.length > this.maxNotes) {
+      this.facts.notes.splice(0, this.facts.notes.length - this.maxNotes);
+    }
+    this._scheduleSaveFacts();
+  }
+
+  /** Remove alerts/notes past their TTL. Called on boot and can be run on a cron. */
+  _pruneExpired() {
+    const now = Date.now();
+    let changed = false;
+
+    for (const [id, v] of Object.entries(this.facts.seenAlerts)) {
+      if (now - v.ts > this.alertTtlMs) {
+        delete this.facts.seenAlerts[id];
+        changed = true;
+      }
+    }
+    const keptNotes = this.facts.notes.filter((n) => now - n.ts <= this.noteTtlMs);
+    if (keptNotes.length !== this.facts.notes.length) {
+      this.facts.notes = keptNotes;
+      changed = true;
+    }
+    if (changed) this._scheduleSaveFacts();
+
+    for (const [id, entry] of this.sessions) {
+      if (now - entry.lastActiveAt > this.sessionIdleTtlMs) this.sessions.delete(id);
+    }
   }
 
   // ── Routing: do we need to recall facts into the context? ───────────────
@@ -172,9 +284,14 @@ export class AgentMemory {
     return messages;
   }
 
-  _summarize(oldMessages) {
-    // Simple: concatenate the text and truncate. In production, use a small
-    // model to generate a real summary.
+  async _summarize(oldMessages) {
+    if (this.summarizer) {
+      try {
+        return await this.summarizer(oldMessages);
+      } catch (err) {
+        logger.error({ err: err.message }, "[Memory] summarizer failed, falling back to naive summary");
+      }
+    }
     return oldMessages
       .map((m) => `${m.role}: ${String(m.content).slice(0, 100)}`)
       .join(" | ");
@@ -184,4 +301,6 @@ export class AgentMemory {
 export const agentMemory = new AgentMemory({
   factsFile: path.resolve("./data/agent-memory.json"),
   sessionsFile: path.resolve("./data/agent-sessions.json"),
+  // Plug in a real summarizer, e.g. calling a small local model:
+  // summarizer: async (msgs) => (await callSmallModel(msgs)).text,
 });
