@@ -6,7 +6,7 @@ Node.js (ESM) Express service: an AI SOC agent that answers security questions b
 
 - Install: `pnpm install`
 - Run server: `node app.js` (serves on `process.env.PROXY_PORT`, default 3000)
-- Tests: `npm test` is a **stub that fails**. Run real tests with `node --test test/<file>.test.js`
+- Tests: `npm test` runs the offline unit test (`test/agent-memory.test.js`). Run individual files with `node --test test/<file>.test.js`
   - Unit (offline): `test/agent-memory.test.js`
   - Everything else (`agents.test.js`, `chat-memory.test.js`, ...) hits **live services** — Wazuh API at `linh.local:55000`, OpenSearch, and Cloudflare/NVIDIA LLM endpoints. They need a working `.env` and reachable lab hosts; there are no mocks.
 
@@ -29,7 +29,7 @@ Tool handlers throw on error; the tool-calling loop converts thrown errors into 
 
 ## Memory
 
-`memory/agent-memory.js` exports a singleton `agentMemory` with **cwd-relative** paths (`./data/agent-memory.json`, `./data/agent-sessions.json`) — must run from repo root. Writes are debounced (500ms); call `await agentMemory.flush()` in tests before asserting persistence. Session history is injected as prompt context; long-term facts (seenAlerts, notes) are only injected when the user message matches a recall regex (`needsRecall`).
+`memory/agent-memory.js` exports a singleton `agentMemory` backed by **SQLite** (`./data/agent-memory.db`, WAL mode, via `better-sqlite3`) — must run from repo root. On first boot it migrates legacy `./data/agent-memory.json` / `./data/agent-sessions.json` into the DB and renames them to `*.json.migrated` (kept as backup); migrated sessions get `lastActiveAt` bumped to migration time so the boot-time TTL prune cannot wipe them. Writes are committed immediately (no debounce); `flush()` is just a WAL checkpoint and `close()` releases the DB — call `close()` before deleting `data/` and in tests that create instances with temp dirs (Windows file locks). Session history is injected as prompt context; long-term facts (seenAlerts, notes) are only injected when the user message matches a recall regex (`needsRecall`). Fresh start = delete the whole `data/` dir (including `agent-memory.db`).
 
 ## Environment
 
@@ -46,7 +46,7 @@ Config modules fall back to the literal string `"Missing ... environment variabl
 
 - ESM only (`"type": "module"`); use `import`, never `require`.
 - Package manager is pnpm (`pnpm-lock.yaml`); don't commit `package-lock.json`.
-- `data/`, `logs/`, `cache/` are gitignored runtime state (memory store, pino logs, cached Wazuh JWT in `cache/token.json`). Don't commit them; safe to delete `data/*.json` for a fresh start.
+- `data/`, `logs/`, `cache/` are gitignored runtime state (memory store `data/agent-memory.db` + legacy `data/*.json.migrated` backups, pino logs, cached Wazuh JWT in `cache/token.json`). Don't commit them; fresh start = delete the whole `data/` dir.
 - No lint/format/typecheck — follow existing style (2-space indent in `model/`, `memory/`; 4-space in `api/`; ESM exports at bottom for barrels like `utils/index.js`).
 
 ## Testing the API by hand (Windows / PowerShell)

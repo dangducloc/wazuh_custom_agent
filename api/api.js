@@ -1,7 +1,7 @@
 import express from "express";
 import { randomUUID } from "crypto";
 import { chat } from "./chat.js";
-import { agentMemory } from "../memory/agent-memory.js";
+import { agentMemory } from "../memory/index.js";
 
 const api = express();
 api.use(express.json());

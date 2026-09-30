@@ -4,7 +4,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { chat } from "../api/chat.js";
-import { agentMemory } from "../memory/agent-memory.js";
+import { agentMemory } from "../memory/index.js";
 
 describe("chat memory recall", () => {
   it("should recall a previously remembered alert", async () => {

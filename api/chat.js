@@ -4,7 +4,7 @@ import { registry, FALLBACK_ORDER, guardedHandlers } from "./registry.js";
 import { wazuhToolDefinitions } from "../tools/descriptions.js";
 import { logger } from "../utils/index.js";
 import { SYSTEM_PROMPT } from "../model/system-prompts.js";
-import { agentMemory } from "../memory/agent-memory.js";
+import { agentMemory } from "../memory/index.js";
 
 for (const name of registry.list()) {
     registry.get(name).client.registerTools(guardedHandlers);
