@@ -1,5 +1,5 @@
 // api/chat.js
-import { chatWithFallback } from "../model/compatible-ai.js";
+import { chatWithFallback } from "../model/index.js";
 import { registry, FALLBACK_ORDER, guardedHandlers } from "./registry.js";
 import { resolveToolPolicy } from "./tool-policy.js";
 import { logger } from "../utils/index.js";

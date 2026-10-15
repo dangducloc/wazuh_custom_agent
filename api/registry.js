@@ -1,5 +1,5 @@
 // /api/registry.js
-import { ProviderRegistry } from "../model/compatible-ai.js";
+import { ProviderRegistry } from "../model/index.js";
 import { logger } from "../utils/index.js";
 import { modelConfig } from "../config/index.js";
 import { summarizeIfLarge } from "../utils/index.js";
