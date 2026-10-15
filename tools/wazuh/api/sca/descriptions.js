@@ -15,6 +15,10 @@
 // non-200 failures (unlike the null/false contract of the agent/groups modules).
 // The agent loop catches those throws and surfaces them back to the model as
 // `{ "error": <message> }` tool results.
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode. All
+// SCA tools are read-only.
 
 import {
     listAgentScaPolicies,
@@ -28,6 +32,7 @@ const AGENT_ID_PATTERN = "^[0-9]{3}$";
 export const toolDefinitions = [
     {
         name: "get_sca_policies",
+        access: "read",
         description:
             "Retrieve the list of SCA (Security Configuration Assessment) policies applied to a " +
             "specific Wazuh agent. Each policy has an id such as `cis_ubuntu22-04` or a custom name, " +
@@ -50,6 +55,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_sca_policy_checks",
+        access: "read",
         description:
             "Retrieve the individual SCA checks/results for a given policy on a given agent. " +
             "Returns the full list of checks with their `result` (`passed`, `failed`, `not applicable`, " +
@@ -93,6 +99,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_sca_failed_checks",
+        access: "read",
         description:
             "Convenience wrapper that returns only the FAILED checks for a given SCA policy on an " +
             "agent. Equivalent to calling `get_sca_policy_checks` with `result` set to `failed`. " +

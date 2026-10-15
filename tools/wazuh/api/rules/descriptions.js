@@ -18,6 +18,10 @@
 // the implementations in `rule-tools.js` THROW on transport / non-200
 // failures. The agent loop catches those throws and surfaces them back to the
 // model as `{ "error": <message> }` tool results.
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode.
+// Destructive tools additionally declare `destructive: true`.
 
 import {
     listRules,
@@ -52,6 +56,7 @@ const RULE_REQUIREMENTS = [
 export const toolDefinitions = [
     {
         name: "get_rule_list",
+        access: "read",
         description:
             "Retrieve Wazuh detection rules with optional filters. Returns an array of rule objects " +
             "(id, level, description, groups, filename, status, compliance mappings such as " +
@@ -119,6 +124,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_rule_groups",
+        access: "read",
         description:
             "Retrieve the list of Wazuh rule groups (e.g. `windows`, `sshd`, `web`, `sysmon`). " +
             "Returns an array of group name strings. Use this to discover valid values for the " +
@@ -141,6 +147,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_rule_requirements",
+        access: "read",
         description:
             "Retrieve the list of requirement names defined in Wazuh rules for a given compliance " +
             "framework (pci_dss, gdpr, hipaa, nist-800-53, gpg13, tsc, or mitre). Returns an array " +
@@ -161,6 +168,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_rule_file_list",
+        access: "read",
         description:
             "Retrieve the list of rule XML files known to the Wazuh manager (both the stock ruleset " +
             "and custom rules). Returns objects with `filename`, `relative_dirname`, and `status`. " +
@@ -191,6 +199,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_rule_file",
+        access: "read",
         description:
             "Retrieve the raw XML content of a single rule file. Returns the XML as a plain string, " +
             "not a parsed object. Use to inspect the exact rule definitions inside a file before " +
@@ -218,6 +227,7 @@ export const toolDefinitions = [
     },
     {
         name: "validate_rule_file",
+        access: "read",
         description:
             "Validate a Wazuh custom rule file's XML BEFORE writing it with `upload_rule_file`. " +
             "Checks that the content is well-formed XML with a root `<group>` element, that every " +
@@ -243,6 +253,7 @@ export const toolDefinitions = [
     },
     {
         name: "upload_rule_file",
+        access: "write",
         description:
             "Create or replace a rule file on the Wazuh manager with the given raw XML content. " +
             "Intended for CUSTOM rules (under `etc/rules`): the manager rejects modifications to " +
@@ -285,6 +296,8 @@ export const toolDefinitions = [
     },
     {
         name: "delete_rule_file",
+        access: "action",
+        destructive: true,
         description:
             "Delete a rule file from the Wazuh manager along with all rules it defines. " +
             "Intended for CUSTOM rule files; stock ruleset files cannot be deleted unless the API " +

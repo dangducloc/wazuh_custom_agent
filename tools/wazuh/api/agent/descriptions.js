@@ -19,6 +19,10 @@
 // Failure contract: most handlers return `null` (read) or `false` (write) on
 // transport / non-200 failures. Surface that to the model instead of letting
 // it infer success from the absence of an exception.
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode
+// (read-only / full). Destructive tools additionally declare `destructive: true`.
 
 import { getAgentActiveConfig } from "./agent-config-tools.js";
 import {
@@ -62,6 +66,7 @@ const GROUP_ID_PATTERN = "^[A-Za-z0-9._-]{1,128}$";
 export const toolDefinitions = [
     {
         name: "get_agent_list",
+        access: "read",
         description:
             "Retrieve the full list of Wazuh agents enrolled in the manager. " +
             "Returns each agent's id, name, ip, status (active / disconnected / never-connected / pending), " +
@@ -75,6 +80,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_agent_by_id",
+        access: "read",
         description:
             "Retrieve a single Wazuh agent by its id. " +
             "Returns the same shape of object as one entry in `get_agent_list` (id, name, ip, status, " +
@@ -98,6 +104,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_agent_active_config",
+        access: "read",
         description:
             "Retrieve the active (currently loaded) configuration block for a given " +
             "`component`/`configuration` pair on a specific Wazuh agent. " +
@@ -135,6 +142,7 @@ export const toolDefinitions = [
     },
     {
         name: "assign_agent_to_group",
+        access: "write",
         description:
             "Assign a single Wazuh agent to a single agent group. " +
             "Pre-conditions, in order: (1) `agent_id` must be a real agent id — NOT `000`. The Wazuh manager " +
@@ -168,6 +176,7 @@ export const toolDefinitions = [
     },
     {
         name: "remove_agent_from_groups",
+        access: "write",
         description:
             "Remove a Wazuh agent from one or more agent groups. " +
             "Group ids are sent as a comma-separated list; pass an empty `group_ids` array to remove the agent " +

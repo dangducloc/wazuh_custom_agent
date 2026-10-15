@@ -17,6 +17,10 @@
 // transport / non-200 failures (unlike the null/false contract of the
 // agent/groups modules). The agent loop catches those throws and surfaces
 // them back to the model as `{ "error": <message> }` tool results.
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode. All
+// syscollector tools are read-only.
 
 import {
     getAgentHotfixes,
@@ -56,6 +60,7 @@ const paginatedResources = [
 const paginatedDefinitions = paginatedResources.map(
     ({ name, label, handler }) => ({
         name,
+        access: "read",
         description:
             `Retrieve the ${label} collected from a given Wazuh agent (syscollector inventory). ` +
             "Returns an array of records; supports optional `q`/`search` filters. Use to inventory a host " +
@@ -88,6 +93,7 @@ export const toolDefinitions = [
     ...paginatedDefinitions.map(({ __handler, ...def }) => def),
     {
         name: "get_syscollector_hardware",
+        access: "read",
         description:
             "Retrieve the hardware inventory of a given Wazuh agent (CPU, RAM, serial number, board/vendor, " +
             "enclosure, etc.). Returns a single object (not a list). Use for asset identification.",
@@ -106,6 +112,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_syscollector_os",
+        access: "read",
         description:
             "Retrieve the operating-system inventory of a given Wazuh agent (kernel, distribution, version, " +
             "platform, hostname). Returns a single object (not a list). Use for OS/version asset identification.",
@@ -124,6 +131,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_syscollector_full_inventory",
+        access: "read",
         description:
             "Retrieve a consolidated inventory snapshot of a given Wazuh agent, bundling hardware, OS, " +
             "packages, ports, processes, and users in a single call. Use for a one-shot overview of a host " +

@@ -4,6 +4,7 @@ import {AlertsMapping} from "./alert.mapping.js";
 export const toolDefinitions = [
   {
     name: "get_alerts_mapping",
+    access: "read",
     description:
       "Retrieve the field mapping of the Wazuh alerts index. Returns only core security-relevant fields by default (rule, agent, timestamp, network, source/dest IP) to save tokens — set include_all=true only if you need application-specific fields like HTTP transaction headers.",
     input_schema: {

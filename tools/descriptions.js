@@ -25,6 +25,11 @@ function findDescriptionFiles(dir) {
     return results;
 }
 
+// Tool access levels enforced by api/tool-policy.js. Every definition must
+// declare one; missing or unknown values fail the boot, so a new tool cannot
+// silently escape the read-only/full request policy.
+const TOOL_ACCESS_LEVELS = ["read", "write", "action"];
+
 async function loadAllTools() {
     const files = findDescriptionFiles(__dirname);
     const toolDefinitions = [];
@@ -34,6 +39,18 @@ async function loadAllTools() {
         const mod = await import(pathToFileURL(file).href);
         if (!mod.toolDefinitions || !mod.toolHandlers) {
             throw new Error(`${file} Must export toolDefinitions And toolHandlers`);
+        }
+        for (const def of mod.toolDefinitions) {
+            if (!def.name) {
+                throw new Error(`${file}: tool definition is missing 'name'`);
+            }
+            if (!TOOL_ACCESS_LEVELS.includes(def.access)) {
+                throw new Error(
+                    `${file}: tool '${def.name}' must declare access: one of ` +
+                        `[${TOOL_ACCESS_LEVELS.join(", ")}] ` +
+                        `(enforced by api/tool-policy.js)`
+                );
+            }
         }
         toolDefinitions.push(...mod.toolDefinitions);
         Object.assign(toolHandlers, mod.toolHandlers);

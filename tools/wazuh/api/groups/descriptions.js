@@ -12,6 +12,10 @@
 //
 // All handlers come back as `null` on transport / non-200 failures — surface
 // that explicitly so the model can react instead of treating null as success.
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode.
+// Destructive tools additionally declare `destructive: true`.
 
 import { getGroupList, createGroup, deleteGroup } from "./groups-tools.js";
 
@@ -23,6 +27,7 @@ const GROUP_ID_PATTERN = "^[A-Za-z0-9._-]{1,128}$";
 export const toolDefinitions = [
     {
         name: "get_group_list",
+        access: "read",
         description:
             "Retrieve the list of all agent groups registered on the Wazuh manager. " +
             "Returns each group's name, count of assigned agents, and a merged-config hash. " +
@@ -35,6 +40,7 @@ export const toolDefinitions = [
     },
     {
         name: "create_group",
+        access: "write",
         description:
             "Create a new agent group on the Wazuh manager. " +
             "Returns the created group's metadata on success. The group_id must be unique and match " +
@@ -56,6 +62,8 @@ export const toolDefinitions = [
     },
     {
         name: "delete_group",
+        access: "action",
+        destructive: true,
         description:
             "Delete one or more agent groups from the Wazuh manager in a single request. " +
             "Group ids are sent as a comma-separated list. Deleting a non-existent group is treated as an error " +

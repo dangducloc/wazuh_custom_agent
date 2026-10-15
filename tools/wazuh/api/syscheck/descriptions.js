@@ -15,6 +15,10 @@
 // transport / non-200 failures (unlike the null/false contract of the
 // agent/groups modules). The agent loop catches those throws and surfaces
 // them back to the model as `{ "error": <message> }` tool results.
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode.
+// Destructive tools additionally declare `destructive: true`.
 
 import {
     runSyscheckScan,
@@ -30,6 +34,7 @@ const AGENT_ID_PATTERN = "^[0-9]{3}$";
 export const toolDefinitions = [
     {
         name: "trigger_syscheck_scan",
+        access: "action",
         description:
             "Trigger a syscheck (FIM) scan on one or more agents. Omit `agent_ids` (or pass an empty " +
             "array) to run the scan on ALL enrolled agents. Returns the scan request metadata including " +
@@ -50,6 +55,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_syscheck_results",
+        access: "read",
         description:
             "Retrieve the syscheck (FIM) database entries for a given agent — added, modified, and removed " +
             "files/directories with their attributes (path, size, permissions, owner, hashes, event type). " +
@@ -80,6 +86,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_syscheck_summary",
+        access: "read",
         description:
             "Retrieve a summary of syscheck results for a given agent — aggregate counts of added, modified " +
             "and removed files, plus last-scan dates. Use instead of `get_syscheck_results` when you only " +
@@ -109,6 +116,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_syscheck_last_scan",
+        access: "read",
         description:
             "Retrieve the timestamps (`start` / `end`) of the last completed syscheck scan for a given " +
             "agent. Use to determine how current the FIM data is before drawing conclusions from it.",
@@ -128,6 +136,8 @@ export const toolDefinitions = [
     },
     {
         name: "clear_syscheck_results",
+        access: "action",
+        destructive: true,
         description:
             "Clear (delete) all syscheck FIM data for a given agent on the manager. This is destructive — " +
             "the agent's stored file-integrity history is removed (the next scan repopulates it). " +

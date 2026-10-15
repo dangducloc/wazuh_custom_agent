@@ -20,6 +20,10 @@
 // transport / non-200 failures (unlike the null/false contract of the
 // agent/groups modules). The agent loop catches those throws and surfaces
 // them back to the model as `{ "error": <message> }` tool results.
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode. All
+// MITRE tools are read-only.
 
 import {
     getMitreMetadata,
@@ -43,6 +47,7 @@ const GROUP_ID_PATTERN = "^G\\d{4}$"; // e.g. G0006
 export const toolDefinitions = [
     {
         name: "get_mitre_metadata",
+        access: "read",
         description:
             "Retrieve metadata about the MITRE ATT&CK database cached on the Wazuh manager " +
             "(last update timestamp, version info). Use to check how fresh the MITRE data is " +
@@ -55,6 +60,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_mitre_tactics",
+        access: "read",
         description:
             "Retrieve MITRE ATT&CK tactics (the high-level attack phases such as Initial Access, " +
             "Execution, Lateral Movement). Omit `tactic_ids` to list all tactics; pass ids to " +
@@ -83,6 +89,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_mitre_techniques",
+        access: "read",
         description:
             "Retrieve MITRE ATT&CK techniques and sub-techniques (e.g. `T1059` Command and Scripting " +
             "Interpreter, `T1059.001` PowerShell). This is the primary lookup for mapping ids found " +
@@ -117,6 +124,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_mitre_mitigations",
+        access: "read",
         description:
             "Retrieve MITRE ATT&CK mitigations (courses of action, e.g. `M1049` Antivirus/Antimalware). " +
             "Use to translate mitigation ids into actionable recommendations when reporting on findings. " +
@@ -158,6 +166,7 @@ toolDefinitions.pop();
 toolDefinitions.push(
     {
         name: "get_mitre_software",
+        access: "read",
         description:
             "Retrieve MITRE ATT&CK software entries (known malware and attacker tools, e.g. `S0154` " +
             "Cobalt Strike). Use to look up tool/malware ids referenced by alerts or groups. " +
@@ -187,6 +196,7 @@ toolDefinitions.push(
     },
     {
         name: "get_mitre_groups",
+        access: "read",
         description:
             "Retrieve MITRE ATT&CK adversary groups (APT aliases, e.g. `G0006` APT1). Use to resolve " +
             "group ids or to enumerate threat actors when profiling detected activity. " +
@@ -217,6 +227,7 @@ toolDefinitions.push(
     },
     {
         name: "get_mitre_references",
+        access: "read",
         description:
             "Retrieve MITRE ATT&CK references (external source citations attached to techniques, " +
             "tactics, software, etc.). Reference ids are free-form — use `search` for fuzzy lookup " +

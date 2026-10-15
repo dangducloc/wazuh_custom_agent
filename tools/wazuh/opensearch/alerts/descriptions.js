@@ -1,4 +1,8 @@
 // /tools/wazuh/alerts/descriptions.js
+//
+// Access convention: every definition declares `access: "read" | "write" |
+// "action"` so `api/tool-policy.js` can filter tools per request mode. All
+// OpenSearch alert tools are read-only.
 
 import { AlertsCountInfo } from "./fetch.alerts-count.js";
 import { AlertsSearch } from "./fetch.alerts-searchs.js";
@@ -7,6 +11,7 @@ import { IndexsInfo } from "./fetch.wazuh-alert-indexs.js";
 export const toolDefinitions = [
     {
         name: "get_alerts_count",
+        access: "read",
         description:
             "Count the number of alerts in Wazuh matching a filter (time range, rule, agent, severity...). Only accepts a 'query' clause — no size/sort/_source. Use to gauge alert volume before running search_alerts.",
         input_schema: {
@@ -23,6 +28,7 @@ export const toolDefinitions = [
     },
     {
         name: "search_alerts",
+        access: "read",
         description:
             "Search alerts in detail in Wazuh using an OpenSearch DSL query, returning full alert documents. Use when specific content (rule, agent, MITRE ATT&CK, timestamp...) is needed for threat hunting analysis.",
         input_schema: {
@@ -49,6 +55,7 @@ export const toolDefinitions = [
     },
     {
         name: "get_wazuh_indexes",
+        access: "read",
         description:
             "Get the list of Wazuh indexes currently available on OpenSearch (name, health, document count...). Use when you need to know which indexes exist before querying.",
         input_schema: {

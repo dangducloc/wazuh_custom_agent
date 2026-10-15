@@ -2,6 +2,7 @@ import express from "express";
 import { randomUUID } from "crypto";
 import { chat } from "./chat.js";
 import { agentMemory } from "../memory/index.js";
+import { logger } from "../utils/index.js";
 
 const api = express();
 api.use(express.json());
@@ -43,10 +44,20 @@ api.post("/chat", (req, res) => {
     }
 
     const sessionId = req.body?.sessionId || "default";
+    const mode = req.body?.mode;
+    const allowDestructive = req.body?.allowDestructive === true;
 
-    chat(message, sessionId)
+    if (mode !== undefined && !["read-only", "full"].includes(mode)) {
+        return res.status(400).json({ error: "mode must be 'read-only' or 'full'." });
+    }
+
+    chat(message, sessionId, { mode, allowDestructive })
         .then((reply) => res.json({ reply, sessionId }))
-        .catch((err) => res.status(500).json({ error: err.message }));
+        .catch((err) => {
+            // Propagate provider/tool failures instead of replying 200 with no `reply`.
+            logger.error({ err: err.message, sessionId }, "POST /chat failed.");
+            res.status(500).json({ error: err.message, sessionId });
+        });
 });
 
 export { api };
